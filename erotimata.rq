@@ -1,0 +1,143 @@
+#Εύρεση των βίντεο με αναφορά στο τίτλο και στο δημιουργό τους. 
+
+select ?s ?title ?creator  
+
+where  
+
+{             
+
+    ?s <http://schema.org/creator> ?creator.   
+
+    ?s <http://schema.org/name> ?title. 
+
+} 
+
+#Εύρεση των βίντεο που έχουν απενεργοποιημένα τα σχόλια και τις αξιολογήσεις (likes, dislikes) 
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+select ?s ?title where {  
+
+	?s <http://schema.org/name> ?title. 
+
+    ?s <http://example.com/comments_disabled> "True"^^xsd:boolean. 
+
+    ?s <http://example.com/ratings_disabled> "True"^^xsd:boolean. 
+
+} 
+
+#Εύρεση του βίντεο με τα περισσότερα likes 
+
+select ?s ?likes 
+
+        where {   
+
+  
+
+            ?s <http://purl.org/net/soron/likes> ?likes. 
+
+     
+
+} order by desc (?likes ) 
+
+limit 1 
+
+#Εύρεση του βίντεο με τις λιγότερες προβολές 
+
+select ?s ?views 
+
+        where {   
+
+  
+
+            ?s <http://rdfs.org/sioc/ns#num_views> ?views. 
+
+     
+
+} order by  (?views ) 
+
+limit 1 
+
+#Εύρεση των τίτλων των βίντεο που έχουν περισσότερες προβολές από 1500000 ταξινομημένα σε φθίνουσα σειρά των προβολών 
+
+select ?title ?views  
+
+where  
+
+{  
+
+    ?s <http://schema.org/name> ?title . 
+
+    ?s <http://rdfs.org/sioc/ns#num_views> ?views. 
+
+    FILTER ( ?views > 1500000). 
+
+} order by desc (?views) 
+
+#Εύρεση των τίτλων των βίντεο που ήταν trending την ημερομηνία  14/11/17 
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+select ?title  
+
+where {  
+
+    ?s  <http://example.com/trending_date> "17.14.11"^^xsd:dateTime. 
+
+    ?s <http://schema.org/name> ?title. 
+
+} 
+
+#Εύρεση του μέσου όρου προβολών ανά δημιουργό 
+
+select ?creator (avg(?views) as ?avgviews) 
+
+where 
+
+    { 
+
+        ?s <http://schema.org/creator> ?creator. 
+
+        {select ?s ?views 
+
+        where {   
+
+            ?s <http://rdfs.org/sioc/ns#num_views> ?views . 
+
+        } } 
+
+    }group by ?creator 
+
+#Δημιουργία τριπλετών RDF βρίσκοντας για κάθε βίντεο την απόλυτη τιμή της διαφοράς των likes από τα dislikes. 
+
+construct {?s <http://example.com/difference> ?difference} 
+
+where{ 
+
+    select ?s   (abs(?likes - ?dislikes) as ?difference) 
+
+        where {   
+
+            ?s <http://purl.org/net/soron/likes> ?likes . 
+
+        	?s <http://purl.org/net/soron/dislikes> ?dislikes . 
+
+} } 
+
+#Εύρεση του αριθμού των βίντεο  που έχει το κάθε κανάλι στη βάση. 
+
+select ?creator (count(?creator) as ?numofvideos) where {  
+
+	?s <http://schema.org/creator> ?creator.  
+
+} group by (?creator) 
+
+#Εύρεση των τίτλων των βίντεο που ανέβηκαν από το κανάλι “Vox” 
+
+select ?title where {  
+
+    ?s  <http://schema.org/creator> "Vox".  
+
+    ?s <http://schema.org/name> ?title. 
+
+} 
